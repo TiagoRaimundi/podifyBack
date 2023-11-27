@@ -6,15 +6,7 @@ const router = Router()
 
 router.post(
     "/create",
-    (req, res, next) => {
-
-        const { email, password, name } = req.body
-        if (!name.trim()) return res.json({ error: "Name is missing!" })
-        if (name.length < 3) return res.json({ error: 'Invalid name!' })
-
-        next()
-
-    },
+   
     async (req: CreateUser, res) => {
         const { email, password, name } = req.body
         //const newUser = new User ({email, password, name})
