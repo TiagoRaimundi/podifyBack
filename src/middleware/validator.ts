@@ -1,4 +1,3 @@
-import { CreateUserSchema } from "#/utils/validationSchema";
 import { RequestHandler } from "express";
 import * as yup from 'yup'
 
