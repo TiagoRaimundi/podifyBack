@@ -12,8 +12,7 @@ export const create: RequestHandler  =  async (req: CreateUser, res) => {
 
     //send verification email
     const transport = nodemailer.createTransport({
-        host: "sandbox.smtp.mailtrap.io",
-        port: 2525,
+        service: 'gmail',
         auth: {
           user: GOOGLE_USER,
           pass: GOOGLE_PASS
