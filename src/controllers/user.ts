@@ -1,6 +1,7 @@
 import { CreateUser } from "#/@types/user"
 import nodemailer from 'nodemailer'
 import User from "#/models/user"
+import path from 'path'
 import { RequestHandler } from "express"
 import emailVerificationToken from "#/models/emailVerificationToken"
 import { GOOGLE_USER, GOOGLE_PASS } from "#/utils/variables"
@@ -29,12 +30,33 @@ export const create: RequestHandler  =  async (req: CreateUser, res) => {
         }
       });
 
+      const welcomeMessage = `Hi ${name}, welcome to Podify! There are so much thing that we dp
+      for verified users. Use the given OTP to verify your email.`
+
       transport.sendMail({
         to: user.email,
         from: "auth@yapp.com",
+        subject: welcomeMessage,
         html: generateTemplate({
-            banner: ''
-        })
+            title: "Welcome to Podify",
+            message: welcomeMessage,
+            logo:"cid:logo",
+            banner: "cid:welcome",
+            link: "#",
+            btnTitle: token
+        }),
+        attachments: [
+            {
+                filename: "logo.png",
+                path: path.join(__dirname, "../mail/logo.png"),
+                cid: "logo"
+            },
+            {
+                filename: "welcome.png",
+                path: path.join(__dirname, "../mail/welcome.png"),
+                cid: "welcome"
+            }
+        ]
       })
 
     res.status(201).json({ user })
