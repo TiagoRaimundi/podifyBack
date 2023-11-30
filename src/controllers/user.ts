@@ -9,15 +9,16 @@ import { generateToken } from "#/utils/helpers"
 export const create: RequestHandler  =  async (req: CreateUser, res) => {
 
     const { email, password, name } = req.body
-
+    
     const user = await User.create({ name, email, password })
     
     const token = generateToken()
-    const verificationToken = await emailVerificationToken.create({
+    await emailVerificationToken.create({
         owner: user._id,
         token
 
     })
+
     //send verification email
     const transport = nodemailer.createTransport({
         service: 'gmail',
