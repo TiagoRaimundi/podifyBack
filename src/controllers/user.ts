@@ -5,6 +5,7 @@ import { RequestHandler } from "express"
 import emailVerificationToken from "#/models/emailVerificationToken"
 import { GOOGLE_USER, GOOGLE_PASS } from "#/utils/variables"
 import { generateToken } from "#/utils/helpers"
+import { generateTemplate } from "#/mail/template"
 
 export const create: RequestHandler  =  async (req: CreateUser, res) => {
 
@@ -31,7 +32,9 @@ export const create: RequestHandler  =  async (req: CreateUser, res) => {
       transport.sendMail({
         to: user.email,
         from: "auth@yapp.com",
-        html: `<h1>Your verification token is ${token}</h1>`
+        html: generateTemplate({
+            banner: ''
+        })
       })
 
     res.status(201).json({ user })
