@@ -4,7 +4,7 @@ import PasswordResetToken from "#/models/passwordResetToken"
 
 import User from "#/models/user"
 import { generateToken } from "#/utils/helpers"
-import { sendVerificationMail } from "#/utils/mail"
+import { sendForgetPasswordLink, sendVerificationMail } from "#/utils/mail"
 import { CreateUserSchema } from "#/utils/validationSchema"
 import { PASSWORD_RESET_LINK } from "#/utils/variables"
 import crypto from 'crypto'
@@ -96,6 +96,13 @@ export const generateForgetPasswordLink: RequestHandler = async (req, res) => {
     //https://yourapp.com/reset-password?token=hfkshf4322hfjkds&userId=
 
     const token = crypto.randomBytes(36).toString('hex')
+
+    await PasswordResetToken.findOneAndDelete({
+        owner: user._id,
+        
+
+    })
+
     await PasswordResetToken.create({
         owner: user._id,
         token
@@ -103,7 +110,9 @@ export const generateForgetPasswordLink: RequestHandler = async (req, res) => {
 
     const resetLink = `${PASSWORD_RESET_LINK}?token=${token}&userId=${user._id}` 
 
-    res.json({ resetLink })
+    sendForgetPasswordLink({email: user.email, link: resetLink})
+
+    res.json({ message: "Check you registered mail" })
 
 }
 
