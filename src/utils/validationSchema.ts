@@ -21,14 +21,15 @@ export const CreateUserSchema = yup.object().shape({
     "Password is too simple!")
 })
 
-export const EmailVerificationBody = yup.object().shape({
+export const TokenAndIDValidation = yup.object().shape({
     token: yup.string().trim(). required("Invalid token!"),
     userId: yup.string().transform(function(value){
         if(this.isType(value) && isValidObjectId(value)){
             return value
-        }else{
-            return ""
         }
+            return ""
+        
     })
     .required("Invalid userId!"),
 })
+
