@@ -2,7 +2,7 @@ import { generateTemplate } from "#/mail/template";
 import emailVerificationToken from "#/models/emailVerificationToken";
 import user from "#/models/user";
 import { generateToken } from "./helpers";
-import { GOOGLE_PASS, GOOGLE_USER, VERIFICATION_EMAIL } from "./variables";
+import { GOOGLE_PASS, GOOGLE_USER, SIGN_IN_URL, VERIFICATION_EMAIL } from "./variables";
 import nodemailer from 'nodemailer'
 import path from 'path'
 
@@ -87,6 +87,39 @@ export const sendForgetPasswordLink = async (options: Options) => {
             logo:"cid:logo",
             banner: "cid:forget_password",
             link, 
+            btnTitle: "Reset Password",
+        }),
+        attachments: [
+            {
+                filename: "logo.png",
+                path: path.join(__dirname, "../mail/logo.png"),
+                cid: "logo"
+            },
+            {
+                filename: "forget_password.png",
+                path: path.join(__dirname, "../mail/welcome.png"),
+                cid: "forget_password"
+            }
+        ]
+      })
+}
+
+export const  sendPassResetSuccessEmail = async (name: string, email: string) => {
+    const transport = generateMailTransporter()
+    
+    
+      const message = "We just received a request that you forgot your password. No problem you can use the link below and create brand new password."
+      transport.sendMail({
+
+        to: email,
+        from: VERIFICATION_EMAIL,
+        subject: "Password Reset Successfully",
+        html: generateTemplate({
+            title: "Password Reset Successfully",
+            message,
+            logo:"cid:logo",
+            banner: "cid:forget_password",
+            link: SIGN_IN_URL, 
             btnTitle: "Reset Password",
         }),
         attachments: [
