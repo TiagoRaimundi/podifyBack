@@ -14,4 +14,5 @@ router.post("/forget-password", generateForgetPasswordLink)
 router.post("/verify-pass-reset-token", validate(TokenAndIDValidation), isValidPassResetToken, grantValid)
 router.post('/update-password', validate(updatePasswordSchema), isValidPassResetToken, updatePassword)
 
+
 export default router
