@@ -17,6 +17,7 @@ container.style.display = "none";
 
 
 let token, userId; 
+const passRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#\$%\^&\*])[a-zA-Z\d!@#\$%\^&\*]+$/
 // If you plan to use URLSearchParams, you can do so without a Proxy
 window.addEventListener('DOMContentLoaded', async () => {
     const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -50,3 +51,64 @@ window.addEventListener('DOMContentLoaded', async () => {
   
 });
 
+const displayError = (errorMessage) => {
+    //first we need to remove if there is any success message.
+    success.style.display = "none"
+    error.innerText = errorMessage
+    error.style.display = "block"
+}
+
+const displaySuccess = (successMessage) => {
+    //first we need to remove if there is any error message.
+    error.style.display = "none"
+    success.innerText = successMessage
+    success.style.display = "block"
+}
+
+const handleSubmit = async(evt) => {
+    evt.preventDefault()
+    //validate
+    if(!password.value.trim()){
+        //render error
+        return displayError("Password is missing!")
+    }
+    if(!passRegex.test(password.value)){
+        //render error
+        return displayError("Password is to simple, use alpha numeric with special characteres!")
+    }
+    if(password.value !== confirmPassword.value){
+        //render error
+        return displayError("Password do not match!")
+    }
+    button.disabled = true
+    button.innerText = "Please wait..."
+    // handle the submit
+    const res = await fetch("/auth/update-password",
+    {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json"
+
+        },
+        body: JSON.stringify({
+            token,
+            userId,
+            password: password.value
+        })
+    })
+    button.disabled = false
+    button.innerText = "Reset Password"
+
+    if(!res.ok){
+        const { error } = await res.json()
+        return displayError(error)
+    }
+
+    displaySuccess("Your password is resets successfully! ")
+
+    //resetting the form
+    password.value = ""
+    confirmPassword.value = ""
+}
+
+form.addEventListener('submit', handleSubmit)
