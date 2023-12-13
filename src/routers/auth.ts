@@ -24,8 +24,21 @@ router.get('/is-auth', mustAuth, (req, res) => {
         profile: req.user,
 
     })
-}
-)
+})
+
+router.get('/public', (req, res) => {
+    res.json({
+        message: "You are in public route."
+
+    })
+})
+
+router.get('/private', mustAuth, (req, res) => {
+    res.json({
+        message: "You are in private route."
+
+    })
+})
 
 
 export default router
