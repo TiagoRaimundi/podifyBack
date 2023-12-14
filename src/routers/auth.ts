@@ -23,7 +23,7 @@ router.get('/is-auth', mustAuth, (req, res) => {
 
     })
 })
-
+ 
 router.post('/update-profile', fileParser, (req: RequestWithFiles, res) =>{
     console.log(req.files)
     res.json({ok: true})
