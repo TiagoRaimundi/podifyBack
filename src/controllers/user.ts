@@ -10,7 +10,9 @@ import { JWT_SECRET, PASSWORD_RESET_LINK } from "#/utils/variables"
 import crypto from 'crypto'
 import { RequestHandler } from "express"
 import { isValidObjectId } from "mongoose"
-
+import cloudinary from "#/cloud"
+import formidable from "formidable"
+import { RequestWithFiles } from "#/middleware/fileParser"
 
 export const create: RequestHandler = async (req: CreateUser, res) => {
 
@@ -170,3 +172,38 @@ export const signIn: RequestHandler = async (req, res) => {
         token
     })
 }
+
+
+export const updateProfile: RequestHandler = async (req: RequestWithFiles, res) => {
+    const { name } = req.body;
+    const avatar = req.files?.avatar as formidable.File;
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: "User not found!" });
+
+    if (typeof name !== "string" || name.trim().length < 3) {
+        return res.status(422).json({ error: "Invalid name!" });
+    }
+
+    user.name = name;
+
+    if (avatar) {
+        try {
+            // Assuming you have logic to remove the existing avatar if necessary
+
+            const { secure_url, public_id } = await cloudinary.uploader.upload(avatar.filepath, {
+                width: 300,
+                height: 300,
+                crop: "thumb",
+                gravity: "face"
+            });
+
+            user.avatar = { url: secure_url, publicId: public_id };
+        } catch (error) {
+            return res.status(500).json({ error: "Error uploading avatar." });
+        }
+    }
+
+    await user.save();
+    res.json({ avatar: user.avatar });
+};
