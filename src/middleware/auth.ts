@@ -46,6 +46,8 @@ export const mustAuth: RequestHandler = async (req, res, next) => {
             followers: user.followers.length,
             followings: user.followings.length
         };
+
+        req.token = token
         next();
     } catch (error) {
         return res.status(403).json({ error: "Invalid or expired token!" });

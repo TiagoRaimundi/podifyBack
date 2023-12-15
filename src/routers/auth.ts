@@ -1,5 +1,5 @@
 
-import { create, generateForgetPasswordLink, grantValid, sendProfile, sendReVerificationToken, signIn, updatePassword, updateProfile, verifyEmail } from '#/controllers/auth'
+import { create, generateForgetPasswordLink, grantValid, logOut, sendProfile, sendReVerificationToken, signIn, updatePassword, updateProfile, verifyEmail } from '#/controllers/auth'
 import { isValidPassResetToken, mustAuth } from '#/middleware/auth'
 import fileParser from '#/middleware/fileParser'
 import { validate } from '#/middleware/validator'
@@ -19,14 +19,6 @@ router.post('/sign-in',
 
 router.get('/is-auth', mustAuth, sendProfile)
 
-
- 
 router.post('/update-profile', mustAuth, fileParser, updateProfile)
-   
-
-
-
-
-
-
+router.post("/log-out", mustAuth, logOut)
 export default router
