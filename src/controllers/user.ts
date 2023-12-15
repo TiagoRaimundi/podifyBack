@@ -188,6 +188,9 @@ export const updateProfile: RequestHandler = async (req: RequestWithFiles, res) 
     user.name = name;
 
     if (avatar) {
+        if(user.avatar?.publicId){
+            await cloudinary.uploader.destroy(user.avatar?.publicId)
+        }
         try {
             // Assuming you have logic to remove the existing avatar if necessary
 
