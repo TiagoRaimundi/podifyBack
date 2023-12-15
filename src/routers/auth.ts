@@ -1,7 +1,7 @@
 
-import { create, generateForgetPasswordLink, grantValid, sendReVerificationToken, signIn, updatePassword, updateProfile, verifyEmail } from '#/controllers/user'
+import { create, generateForgetPasswordLink, grantValid, sendProfile, sendReVerificationToken, signIn, updatePassword, updateProfile, verifyEmail } from '#/controllers/auth'
 import { isValidPassResetToken, mustAuth } from '#/middleware/auth'
-import fileParser, { RequestWithFiles } from '#/middleware/fileParser'
+import fileParser from '#/middleware/fileParser'
 import { validate } from '#/middleware/validator'
 import { CreateUserSchema, SignInValidationSchema, TokenAndIDValidation, updatePasswordSchema } from '#/utils/validationSchema'
 import { Router } from 'express'
@@ -17,12 +17,9 @@ router.post('/sign-in',
     validate(SignInValidationSchema),
     signIn)
 
-router.get('/is-auth', mustAuth, (req, res) => {
-    res.json({
-        profile: req.user,
+router.get('/is-auth', mustAuth, sendProfile)
 
-    })
-})
+
  
 router.post('/update-profile', mustAuth, fileParser, updateProfile)
    

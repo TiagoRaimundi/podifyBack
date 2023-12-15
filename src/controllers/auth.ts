@@ -3,7 +3,7 @@ import EmailVerificationToken from "#/models/emailVerificationToken"
 import PasswordResetToken from "#/models/passwordResetToken"
 import jwt from 'jsonwebtoken'
 import User from "#/models/user"
-import { generateToken } from "#/utils/helpers"
+import { formatProfile, generateToken } from "#/utils/helpers"
 import { sendForgetPasswordLink, sendPassResetSuccessEmail, sendVerificationMail } from "#/utils/mail"
 import { CreateUserSchema } from "#/utils/validationSchema"
 import { JWT_SECRET, PASSWORD_RESET_LINK } from "#/utils/variables"
@@ -208,5 +208,10 @@ export const updateProfile: RequestHandler = async (req: RequestWithFiles, res) 
     }
 
     await user.save();
-    res.json({ avatar: user.avatar });
+    
+    res.json({ profile: formatProfile(user)})
 };
+
+export const sendProfile: RequestHandler = (req, res) => {
+    res.json({profile: req.user})
+}
