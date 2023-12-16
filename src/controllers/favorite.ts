@@ -15,7 +15,9 @@ export const toggleFavorite: RequestHandler = async (req, res) => {
     const alreadyExists = await Favorite.findOne({ owner: req.user.id, items: audioId })
     if (alreadyExists) {
         //we want to remove from old lists
-        await Favorite.updateOne({ owner: req.user.id }, {
+        await Favorite.updateOne(
+            { owner: req.user.id }, 
+        {
             $pull: { items: audioId }
         })
 
@@ -39,7 +41,19 @@ export const toggleFavorite: RequestHandler = async (req, res) => {
 
     }
 
-    res.json({ status })
+    if(status === 'added'){
+        await Audio.findByIdAndUpdate(audioId, {
+            $addToSet: {likes: req.user.id}
+        })
+    }
 
+    if(status === 'removed'){
+        await Audio.findByIdAndUpdate(audioId, {
+            $pull: {likes: req.user.id}
+        })
+    }
+
+
+    res.json({ status })
 
 }
