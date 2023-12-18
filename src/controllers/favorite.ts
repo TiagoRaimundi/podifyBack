@@ -8,6 +8,8 @@ export const toggleFavorite: RequestHandler = async (req, res) => {
     let status : "added" | "removed"
     
     if (!isValidObjectId(audioId)) return res.status(422).json({ error: "Audio id is invalid" })
+ 
+
 
     const audio = await Audio.findById(audioId)
     if (!audio) return res.status(404).json({ error: 'Resources not found!' })
@@ -57,3 +59,23 @@ export const toggleFavorite: RequestHandler = async (req, res) => {
     res.json({ status })
 
 }
+
+
+
+export const getFavorites: RequestHandler = async (req, res) => {
+    const  userID = req.user.id
+ 
+    const favorite = await Favorite.findOne({ owner: userID })
+    .populate({
+     path: "items",
+     populate: {
+         path: "owner",
+ 
+     }
+    })
+
+     
+    res.json( { favorite })
+   
+ 
+ }
