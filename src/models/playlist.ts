@@ -1,7 +1,6 @@
 import { Model, model, models } from "mongoose"
 import { ObjectId, Schema } from "mongoose"
 
-
 interface PlaylistDocument {
     title: string
     owner: ObjectId
