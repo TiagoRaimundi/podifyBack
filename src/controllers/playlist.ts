@@ -1,4 +1,4 @@
-import { CreatePlaylistRequest, UpdatePlaylistRequest } from "#/@types/audio";
+import { CreatePlaylistRequest, PopulateFavList, UpdatePlaylistRequest } from "#/@types/audio";
 import Audio from "#/models/audio";
 import Playlist from "#/models/playlist";
 import { RequestHandler } from "express";
@@ -82,8 +82,8 @@ export const removePlaylist: RequestHandler = async (
 ) => {
     const { playlistId, resId, all } = req.query
 
-    if(!isValidObjectId(playlistId))
-     return res.status(422).json({error: "Invalid playlist id!"})
+    if (!isValidObjectId(playlistId))
+        return res.status(422).json({ error: "Invalid playlist id!" })
 
     if (all === "yes") {
         const playlist = await Playlist.findOneAndDelete({
@@ -91,31 +91,31 @@ export const removePlaylist: RequestHandler = async (
             owner: req.user.id
         })
 
-        if (!playlist) 
+        if (!playlist)
             return res.status(404).json({ error: "Playlist not found!" })
 
     }
 
-    if(resId){
-        if(!isValidObjectId(resId))
-        return res.status(422).json({error: "Invalid audio id!"})
-        
+    if (resId) {
+        if (!isValidObjectId(resId))
+            return res.status(422).json({ error: "Invalid audio id!" })
+
         const playlist = await Playlist.findOneAndUpdate(
-        {
-            _id: playlistId,
-            owner: req.user.id
-        },
-        
-        {
-            $pull: { items: resId }
-        }
+            {
+                _id: playlistId,
+                owner: req.user.id
+            },
+
+            {
+                $pull: { items: resId }
+            }
         )
-    
+
         if (!playlist)
-        return res.status(404).json({ error: "Playlist not found!" })
+            return res.status(404).json({ error: "Playlist not found!" })
 
     }
-  
+
 
     res.json({ success: true })
 };
@@ -123,28 +123,65 @@ export const removePlaylist: RequestHandler = async (
 
 export const getPlaylistByProfile: RequestHandler = async (req, res) => {
     const { pageNo = "0", limit = "20" } = req.query as {
-      pageNo: string;
-      limit: string;
+        pageNo: string;
+        limit: string;
     };
-  
+
     const data = await Playlist.find({
-      owner: req.user.id,
-      visibility: { $ne: "auto" },
+        owner: req.user.id,
+        visibility: { $ne: "auto" },
     })
-      .skip(parseInt(pageNo) * parseInt(limit))
-      .limit(parseInt(limit))
-      .sort("-createdAt");
-  
+        .skip(parseInt(pageNo) * parseInt(limit))
+        .limit(parseInt(limit))
+        .sort("-createdAt");
+
     const playlist = data.map((item) => {
-      return {
-        id: item._id,
-        title: item.title,
-        itemsCount: item.items.length,
-        visibility: item.visibility,
-      };
+        return {
+            id: item._id,
+            title: item.title,
+            itemsCount: item.items.length,
+            visibility: item.visibility,
+        };
     });
-  
+
     res.json({ playlist });
-  };
-  
+};
+
+
+export const getAudios: RequestHandler = async (req, res) => {
+    const { playlistId } = req.params
+
+    if (!isValidObjectId(playlistId)) return res.status(422).json({ error: "Invalid playlist id!" })
+
+    const playlist = await Playlist.findOne({
+        owner: req.user.id,
+        _id: playlistId
+    }).populate<{items: PopulateFavList[]}>({
+        path: "items", populate: {
+            path: "owner",
+            select: "name"
+
+        }
+    })
+
+    if(!playlist) return res.json({list: []})
+
+    const audios = playlist.items.map((item) => {
+        return {
+            id: item._id,
+            title: item.title,
+            category: item.category,
+            file: item.file.url,
+            poster: item.poster?.url,
+            owner: {name: item.owner.name, id: item.owner._id},
+
+        }
+    })
+
+    res.json({list: {
+        id: playlist._id,
+        title: playlist.title,
+        audios,
+    }})
+};
 
