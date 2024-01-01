@@ -120,3 +120,27 @@ export const removePlaylist: RequestHandler = async (
     res.json({ success: true })
 };
 
+
+export const getPlaylistByProfile: RequestHandler = async (
+    req,
+    res
+) => {
+    const data = await Playlist.find({
+        owner: req.user.id,
+        visibility: {$ne: 'auto'}
+    }).sort('-createAt')
+
+    const playlist = data.map((item) => {
+        return {
+            id: item._id,
+            title: item.title,
+            itemsCount: item.items.length,
+            visibility: item.visibility
+        }
+    })
+
+    res.json({playlist})
+
+};
+
+
