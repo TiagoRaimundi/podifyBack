@@ -121,26 +121,30 @@ export const removePlaylist: RequestHandler = async (
 };
 
 
-export const getPlaylistByProfile: RequestHandler = async (
-    req,
-    res
-) => {
+export const getPlaylistByProfile: RequestHandler = async (req, res) => {
+    const { pageNo = "0", limit = "20" } = req.query as {
+      pageNo: string;
+      limit: string;
+    };
+  
     const data = await Playlist.find({
-        owner: req.user.id,
-        visibility: {$ne: 'auto'}
-    }).sort('-createAt')
-
-    const playlist = data.map((item) => {
-        return {
-            id: item._id,
-            title: item.title,
-            itemsCount: item.items.length,
-            visibility: item.visibility
-        }
+      owner: req.user.id,
+      visibility: { $ne: "auto" },
     })
-
-    res.json({playlist})
-
-};
-
+      .skip(parseInt(pageNo) * parseInt(limit))
+      .limit(parseInt(limit))
+      .sort("-createdAt");
+  
+    const playlist = data.map((item) => {
+      return {
+        id: item._id,
+        title: item.title,
+        itemsCount: item.items.length,
+        visibility: item.visibility,
+      };
+    });
+  
+    res.json({ playlist });
+  };
+  
 

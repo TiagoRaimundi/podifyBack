@@ -1,38 +1,39 @@
-import { Model, model, models } from "mongoose"
-import { ObjectId, Schema } from "mongoose"
+import { Model, model, models, ObjectId, Schema } from "mongoose";
 
 interface PlaylistDocument {
-    title: string
-    owner: ObjectId
-    items: ObjectId[]
-    visibility: "public" | "private" | "auto"
+  title: string;
+  owner: ObjectId;
+  items: ObjectId[];
+  visibility: "public" | "private" | "auto";
 }
 
-const playlistSchema = new Schema<PlaylistDocument>({
+const playlistSchema = new Schema<PlaylistDocument>(
+  {
     title: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
-    owner:{
+    owner: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    items: [
+      {
         type: Schema.Types.ObjectId,
         required: true,
-        ref: "user"
-    },
-    items: 
-        [{
-            type: Schema.Types.ObjectId,
-            required: true,
-            ref: "Audio"
-        }],
-
+        ref: "Audio",
+      },
+    ],
     visibility: {
-        type: String,
-        enum: ["public", "private", "auto"],
-        default: 'public'
-    }
+      type: String,
+      enum: ["public", "private", "auto"],
+      default: "public",
+    },
+  },
+  { timestamps: true }
+);
 
-}, {timestamps: true})
+const Playlist = models.Playlist || model("Playlist", playlistSchema);
 
-const Playlist = models.Playlist || model("Playlist", playlistSchema)
-
-export default Playlist as Model<PlaylistDocument>
+export default Playlist as Model<PlaylistDocument>;
