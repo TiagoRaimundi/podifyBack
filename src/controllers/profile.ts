@@ -1,3 +1,4 @@
+import Audio from "#/models/audio";
 import User from "#/models/user";
 import { RequestHandler } from "express";
 import { isValidObjectId } from "mongoose";
@@ -45,4 +46,26 @@ export const updateFollower : RequestHandler = async (req, res) => {
     }
 
     res.json({ status })
+}
+
+
+export const getUploads : RequestHandler = async (req, res) => {
+    const {limit="20", pageNo= "0"} = req.query as paginationQuery
+
+    const data = await Audio.find({owner: req.user.id}).skip(parseInt(limit) * parseInt(pageNo))
+    .limit(parseInt(limit))
+    .sort("-createdAt")
+
+    const audios = data.map(item => {
+        return{
+            id: item._id,
+            title: item.title,
+            about: item.about,
+            file: item.file.url,
+            poster: item.poster?.url,
+            date: item.createdAt,
+            owner: {name: req.user.name, id: req.user.id}
+        }
+    })
+    res.json({audios})
 }
