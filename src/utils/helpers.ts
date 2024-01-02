@@ -12,6 +12,13 @@ export const generateToken = (length = 6) => {
     return otp
 }
 
+
+
+
+
+
+
+
 export const formatProfile = (user: UserDocument) => {
     return {
         
