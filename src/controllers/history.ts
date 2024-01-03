@@ -122,10 +122,10 @@ export const getHistories: RequestHandler = async (req, res) => {
         as: "audioInfo",
       },
     },
-    { 
-    
-        $unwind: "$audioInfo"
-    
+    {
+
+      $unwind: "$audioInfo"
+
     },
 
     {
@@ -138,11 +138,11 @@ export const getHistories: RequestHandler = async (req, res) => {
       }
     },
     {
-      $group:{
+      $group: {
         _id: {
-          $dateToString: { format: "%Y-%m-%d", date: "$date" } 
+          $dateToString: { format: "%Y-%m-%d", date: "$date" }
         },
-        audios: {$push: "$$ROOT"},
+        audios: { $push: "$$ROOT" },
       }
     },
     {
@@ -151,11 +151,86 @@ export const getHistories: RequestHandler = async (req, res) => {
         id: "$id",
         date: "$_id",
         audios: "$$ROOT.audios",
-
       }
     },
-    {$sort: {date: -1}}
+    { $sort: { date: -1 } }
   ])
-  res.json({histories})
+  res.json({ histories })
 };
 
+export const getRecentlyPlayed: RequestHandler = async (req, res) => {
+
+  const match = { $match: { owner: req.user.id } }
+  const sliceMatch = {
+    $project: {
+      myHistory: { $slice: ["$all", 10] },
+    }
+  }
+  const dateSort = {
+    $project: {
+      histories: {
+        $sortArray: {
+          input: "$myHistory",
+          sortBy: { date: -1 },
+        }
+      }
+    }
+  }
+  const unwindWithIndex = {
+    $unwind: { path: "$histories", includeArrayIndex: "index" }
+  }
+
+  const audioLookup = {
+    $lookup: {
+      from: "audios",
+      localField: "histories.audio",
+      foreignField: "_id",
+      as: "audioInfo",
+
+    },
+
+  }
+
+  const unwindAudioInfo = {
+    $unwind: "$audioInfo",
+  }
+  const userLookup = {
+    $lookup: {
+      from: "users",
+      localField: "audioInfo.owner",
+      foreignField: "_id",
+      as: "owner"
+    }
+  }
+  const projectResult = {
+    $project: {
+      _id: 0,
+      id: "$audioInfo._id",
+      title: "$audioInfo.title",
+      about: "$audioInfo.about",
+      file: "$audioInfo.file.url",
+      poster: "$audioInfo.poster.url",
+      category: "$audioInfo.category.url",
+      owner: { name: "$owner.name", id: "$owner._id" },
+      date: "$histories.date",
+      progress: "$histories.progress",
+   
+    }
+  }
+  const unwindUser = { $unwind: "$owner" }
+  const audios = await History.aggregate([
+
+    match,
+    sliceMatch,
+    dateSort,
+    unwindWithIndex,
+    audioLookup,
+    unwindAudioInfo,
+    userLookup,
+    unwindUser,
+    projectResult,
+    
+  ])
+
+  res.json({audios})
+}
