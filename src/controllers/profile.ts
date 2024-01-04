@@ -1,8 +1,11 @@
 import Audio, { AudioDocument } from "#/models/audio";
+import History from "#/models/history";
 import Playlist from "#/models/playlist";
 import User from "#/models/user";
+import { categories } from "#/utils/audio_category";
 import { RequestHandler } from "express";
-import { ObjectId, isValidObjectId } from "mongoose";
+import moment from "moment";
+import { ObjectId, PipelineStage, isValidObjectId } from "mongoose";
 
 export const updateFollower: RequestHandler = async (req, res) => {
     const { profileId } = req.params
@@ -133,13 +136,14 @@ export const getPublicPlaylist: RequestHandler = async (req, res) => {
 
     res.json({
         playlist: playlists.map((item) => {
-        return {
-            id: item._id,
-            title: item.title,
-            itemCount: item.items.length,
-            visibility: item.visibility
-        }
-    })})
+            return {
+                id: item._id,
+                title: item.title,
+                itemCount: item.items.length,
+                visibility: item.visibility
+            }
+        })
+    })
 
 }
 
@@ -147,22 +151,56 @@ export const getPublicPlaylist: RequestHandler = async (req, res) => {
 export const getRecommendedByProfile: RequestHandler = async (req, res) => {
     const user = req.user
 
-    if(user){
+    let matchOptions: PipelineStage = {$match: {_id: {$exists: true}}}
+
+    if (user) {
         //then we want to send by the profile
+
+        //fetch users previous history
+        const userPreviousHistory = await History.aggregate([
+            { $match: { owner: user.id } }, { $unwind: "$all" },
+            {
+                $match: {
+                    "all.date": {
+                        //only those histories which are not older than 30 days
+                        $gte: moment().subtract(30, "days").toDate()
+                    }
+                }
+            },
+            { $group: { _id: "$all.audio" } },
+            {
+                $lookup: {
+                    from: "audios",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "audioData"
+                }
+            },
+            { $unwind: "$audioData" },
+            { $group: { _id: null, category: { $addToSet: "$audioData.category" } } }
+        ])
+
+        const category = userPreviousHistory[0].category
+        if(categories.length){
+
+        }
+
+        matchOptions = {$match: {category: {$in: categories}}}
+     
     }
 
-    Audio.find({})
+
 
     //otherwise we will send generic audios
 
     const audios = await Audio.aggregate([
-        {$match: {_id: {$exists: true}}},
+        matchOptions,
         {
             $sort: {
                 "likes.count": -1
             }
         },
-        {$limit: 10},
+        { $limit: 10 },
         {
             $lookup: {
                 from: "users",
@@ -171,9 +209,9 @@ export const getRecommendedByProfile: RequestHandler = async (req, res) => {
                 as: "owner"
             }
         },
-        {$unwind: "$owner"},
+        { $unwind: "$owner" },
         {
-            $project:{
+            $project: {
                 _id: 0,
                 id: "$_id",
                 title: "$title",
@@ -181,10 +219,10 @@ export const getRecommendedByProfile: RequestHandler = async (req, res) => {
                 about: "$_about",
                 file: "$file.url",
                 poster: "$poster.url",
-                owner: {name: "$owner.name", id: "$owner._id"}
-        }
+                owner: { name: "$owner.name", id: "$owner._id" }
+            }
         }
     ])
 
-    res.json({audios})
+    res.json({ audios })
 }
