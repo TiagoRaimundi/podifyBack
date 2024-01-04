@@ -142,3 +142,49 @@ export const getPublicPlaylist: RequestHandler = async (req, res) => {
     })})
 
 }
+
+
+export const getRecommendedByProfile: RequestHandler = async (req, res) => {
+    const user = req.user
+
+    if(user){
+        //then we want to send by the profile
+    }
+
+    Audio.find({})
+
+    //otherwise we will send generic audios
+
+    const audios = await Audio.aggregate([
+        {$match: {_id: {$exists: true}}},
+        {
+            $sort: {
+                "likes.count": -1
+            }
+        },
+        {$limit: 10},
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner"
+            }
+        },
+        {$unwind: "$owner"},
+        {
+            $project:{
+                _id: 0,
+                id: "$_id",
+                title: "$title",
+                category: "$category",
+                about: "$_about",
+                file: "$file.url",
+                poster: "$poster.url",
+                owner: {name: "$owner.name", id: "$owner._id"}
+        }
+        }
+    ])
+
+    res.json({audios})
+}
