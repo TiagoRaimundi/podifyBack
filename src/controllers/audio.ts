@@ -4,6 +4,7 @@ import { RequestHandler } from "express";
 import formidable from "formidable";
 import cloudinary from "#/cloud";
 import Audio from "#/models/audio";
+import { PopulateFavList } from "#/@types/audio";
 
 interface CreateAudioRequest extends RequestWithFiles {
     body: {
@@ -110,4 +111,31 @@ export const updateAudio: RequestHandler = async (
                 poster: audio.poster?.url,
             },
         });
+};
+
+export const getLatestUploads: RequestHandler = async (req, res) => {
+    const list = await Audio.find()
+        .sort("-createdAt")
+        .limit(10)
+        .populate<PopulateFavList>("owner");
+
+    const audios = list.map((item) => {
+        // Check if the owner exists before accessing its properties
+        let ownerData = {};
+        if (item.owner) {
+            ownerData = { name: item.owner.name, id: item.owner._id };
+        }
+
+        return {
+            id: item._id,
+            title: item.title,
+            about: item.about,
+            category: item.category,
+            file: item.file.url,
+            poster: item.poster?.url,
+            owner: ownerData
+        }
+    });
+
+    res.json({ audios });
 };
