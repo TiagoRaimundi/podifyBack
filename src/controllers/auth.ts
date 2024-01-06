@@ -31,7 +31,7 @@ export const create: RequestHandler = async (req: CreateUser, res) => {
         token
     })
 
-
+    
     sendVerificationMail(token, { name, email, userId: user._id.toString() })
 
     res.status(201).json({ user: { id: user._id, name, email } })
@@ -80,7 +80,6 @@ export const sendReVerificationToken: RequestHandler = async (req, res) => {
         name: user?.name,
         email: user?.email,
         userId: user?._id.toString(),
-
     })
 
     res.json({ message: "Please check you mail!" })
@@ -143,7 +142,7 @@ export const updatePassword: RequestHandler = async (req, res) => {
 
 export const signIn: RequestHandler = async (req, res) => {
     const { password, email } = req.body
-
+    
     const user = await User.findOne({
         email
     })
