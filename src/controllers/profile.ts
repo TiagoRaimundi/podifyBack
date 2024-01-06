@@ -422,3 +422,81 @@ export const getFollowingsProfile: RequestHandler = async (req, res) => {
 
   res.json({ followings: result.followings });
 };
+
+export const getPlaylistAudios: RequestHandler = async (req, res) => {
+  const { limit = "20", pageNo = "0" } = req.query as paginationQuery;
+
+  const {playlistId} = req.params
+
+  if(!isValidObjectId(playlistId)) return res.status(422).json({error: "Invalid playlist id!"})
+
+  const result = await Playlist.aggregate([
+    {$match: {_id: new Types.ObjectId(playlistId)}},
+  
+     {$project: {   items: {
+
+        $slice: [
+          "$items",
+          parseInt(pageNo) * parseInt(limit),
+          parseInt(limit)
+        ]
+      },
+      title: "$title"
+    }
+  },
+  {$unwind: "$items"},
+  {
+    $lookup: {
+      from: "audios",
+      localField: "items",
+      foreignField: "_id",
+      as: "audios"
+    }
+  },
+
+  {$unwind: "$audios"},
+  {
+    $lookup: {
+      from: "users",
+      localField: "audios.owner",
+      foreignField: "_id",
+      as: "userInfo"
+    },
+  },
+  {$unwind: "$userInfo"},
+ 
+  {
+    $group: {
+      _id: {
+        id: "$_id",
+        title: "$title",
+      },
+      audios: {
+        $push:{
+          id: "$audios._id",
+          title: "$audios.title",
+          about: "$audios.about",
+          category: "$audios.category",
+          file: "$audios.file.url",
+          poster: "$audios.poster.url",
+          owner: {name: "$userInfo.name", id: "$userInfo._id"}
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      id:"$_id.id",
+      title:"$_id.title",
+      audios: "$$ROOT.audios"
+
+    }
+  }
+
+  ])
+
+  res.json({list: result})
+ 
+};
+
