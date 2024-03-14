@@ -35,7 +35,6 @@ export const create: RequestHandler = async (req: CreateUser, res) => {
         token
     })
 
-    
     sendVerificationMail(token, { name, email, userId: user._id.toString() })
 
     res.status(201).json({ user: { id: user._id, name, email } })

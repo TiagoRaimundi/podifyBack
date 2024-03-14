@@ -296,6 +296,7 @@ export const getFollowersProfile: RequestHandler = async (req, res) => {
       },
     },
     { $unwind: "$followers" },
+    
     {
       $lookup: {
         from: "users",

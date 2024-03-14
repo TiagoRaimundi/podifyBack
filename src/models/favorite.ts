@@ -1,6 +1,4 @@
 import {Model, ObjectId, Schema, model, models} from "mongoose"
-import { AudioDocument } from "./audio"
-import { AudioValidationSchema } from "#/utils/validationSchema"
 
 interface FavoriteDocument {
     owner: ObjectId
